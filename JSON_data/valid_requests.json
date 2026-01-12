@@ -1,0 +1,13 @@
+{
+    "num_requests": 3,
+    "requests": [
+        {
+            "func_name": "list_all_regional_rail_trains",
+            "url": "TrainView/index.php"
+        },
+        {
+            "func_name": "list_all_trolley_location",
+            "url": "TransitViewAll/index.php"
+        }
+    ]
+}
