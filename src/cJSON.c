@@ -56,7 +56,8 @@
 #pragma GCC visibility pop
 #endif
 
-#include "cJSON.h"
+// may play around with this if it should be locally scoped or just an addon to all.c
+// #include "../lib/cJSON.h"
 
 /* define our own boolean type */
 #ifdef true

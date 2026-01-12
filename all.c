@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <curl/curl.h>
+#include "lib/cJSON.h"
 
-#include "lib/cJSON/cJSON.c"
-#include "lib/csepta/csepta.c"
-#include "main.c"
+#include "src/cJSON.c"
+#include "src/csepta.c"
+#include "src/main.c"
