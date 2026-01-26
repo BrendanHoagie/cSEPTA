@@ -1,6 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <curl/curl.h>
+#include "lib/defs.h"
 #include "lib/cJSON.h"
 
 #include "src/cJSON.c"

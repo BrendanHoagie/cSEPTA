@@ -2,10 +2,13 @@ CC = gcc
 LDFLAGS = $(shell curl-config --libs)
 EXEC = csepta
 
-build: $(EXEC)
+build: | clean $(EXEC)
 
-run : $(EXEC)
-	./$< JSON_data/valid_requests.json
+debug: | clean
+	$(CC) -g -o debug all.c $(LDFLAGS)
+
+run : clean $(EXEC)
+	./$(EXEC)
 
 $(EXEC):
 	$(CC) all.c -o $(EXEC) $(LDFLAGS)
