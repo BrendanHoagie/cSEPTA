@@ -1,8 +1,10 @@
-#include <curl/curl.h>
-#include <pthread.h>
-
 #define VALID_REQUESTS "JSON_data/valid_requests.json"
 #define REGIONAL_RAIL_URL "https://www3.septa.org/api/TrainView/index.php"
 #define TROLLEY_URL "https://www3.septa.org/api/TransitViewAll/index.php"
 #define G_TROLLEY_URL "https://api.septa.org/api/TransitView/index.php?route=G1"
+#define T1_TROLLEY_URL "https://api.septa.org/api/TransitView/index.php?route=T1"
+#define T2_TROLLEY_URL "https://api.septa.org/api/TransitView/index.php?route=T2"
+#define T3_TROLLEY_URL "https://api.septa.org/api/TransitView/index.php?route=T3"
+#define T4_TROLLEY_URL "https://api.septa.org/api/TransitView/index.php?route=T4"
+#define T5_TROLLEY_URL "https://api.septa.org/api/TransitView/index.php?route=T5"
 

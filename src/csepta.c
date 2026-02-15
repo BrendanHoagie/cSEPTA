@@ -1,10 +1,24 @@
 #include "../lib/csepta.h"
 #include "g_trolley.c"
 
-void csepta_init(){
+/*
+ * csepta_write_callback
+ * ---------------------
+ * handle cURL data - only called by libcurl
+ *
+ * contents: data delivered by cURL request
+ * size:     size of each element in contents (always 1)
+ * nmemb:    size of contents
+ * userp:    user-defined structure to store data (cast as void *)
+ *
+ * returns: the size of data stored in userp
+*/
+size_t csepta_write_callback(char *contents, size_t size, size_t nmemb, void *userp);
+
+void csepta_init_and_run(){
 	struct curl_slist *g_slist;
-	mem_t g_chunk;
-	station_t lower_g_stations, upper_g;
+	csepta_mem_t g_chunk;
+	csepta_station_t lower_g_stations, upper_g;
 	csepta_board_t board;
 	// pthread_t thread1;
 	
@@ -46,21 +60,45 @@ void csepta_init(){
     // ideally there is a writer thread and a updater thread
     // the writer thread constantly reads from the board struct and updates the LEDs
 	// the updater thread round robin pulls data from septa API / timetable files
+	
 	// pthread_create(&thread1, NULL, csepta_list_g_trolley, &board);
     // pthread_join(thread1, NULL);
 	board.lower_g_stations = &lower_g_stations;
 	board.upper_g_stations = &upper_g;
-	g_trolley_read((void *) &board);
+	g_trolley_read(&board);
 	curl_global_cleanup();
 }
 
+int csepta_search(int *arr, int size, int target){
+	int left, right, mid, i;
+
+	i = 0;
+	left = 0;
+	right = size - 1;
+	while (left <= right) {
+		mid = left + (right - left) / 2;
+		i++;
+
+		if (arr[mid] == target) {
+			return mid;
+		}
+		if (arr[mid] < target) {
+			left = mid + 1;
+		} else {
+			right = mid - 1;
+		}
+	}
+	return -1;
+}
+
+
 size_t csepta_write_callback(char *contents, size_t size, size_t nmemb, void *userp){
 	size_t realsize;
-	mem_t *mem;
+	csepta_mem_t *mem;
 	char *ptr;
 	
 	realsize = nmemb * size;
-	mem = (mem_t *) userp;
+	mem = (csepta_mem_t *) userp;
 	if(mem->size < mem->size + realsize + 1){
 		ptr = realloc(mem->memory, (mem->size + realsize) * 2); // probably a better way to mimize reallocs
 	}
@@ -74,7 +112,7 @@ size_t csepta_write_callback(char *contents, size_t size, size_t nmemb, void *us
 	return realsize;
 }
 
-void csepta_clear_chunk(mem_t *mem){
+void csepta_clear_chunk(csepta_mem_t *mem){
 	free(mem->memory);
 	mem->memory = NULL;
 	mem->size = 0;
@@ -96,46 +134,3 @@ void csepta_debug_print_binary_unsigned_long(unsigned long num) {
     printf("\n");
 }
 
-long csepta_get_filesize(FILE *fp){
-    long filesize;
-
-    if( fseek(fp, 0, SEEK_END) != 0) exit(EXIT_FAILURE);
-	
-    filesize = ftell(fp);
-    rewind(fp);
-    return filesize;
-}
-
-void csepta_print_array(int *arr, int size){
-	int i;
-	
-	for(i = 0; i < size; i++){
-		printf("arr[%d] = %d\n", i, arr[i]);
-	}
-}
-
-int csepta_search(int *arr, int size, int target){
-	int left, right, mid, i;
-
-	// printf("csepta_search array:\n");
-	// csepta_print_array(arr, size);
-	i = 0;
-	left = 0;
-	right = size - 1;
-	// printf("\nTarget = %d\n\n", target);
-	while (left <= right) {
-		mid = left + (right - left) / 2;
-		// printf("Iteration %d:\nleft = %d\nright = %d\nmid = %d\narr[mid] = %d\n\n", i, left, right, mid, arr[mid]);
-		i++;
-
-		if (arr[mid] == target) {
-			return mid;
-		}
-		if (arr[mid] < target) {
-			left = mid + 1;
-		} else {
-			right = mid - 1;
-		}
-	}
-	return -1;
-}

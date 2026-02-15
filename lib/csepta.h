@@ -1,32 +1,103 @@
 #ifndef __CSEPTA_H__
 #define __CSEPTA_H__
 
-typedef struct{
-    char *memory;
-    size_t size;
-} mem_t;
 
+/*
+ * csepta_mem_t
+ * ------------
+ * structure to hold cURL data
+ *
+ * memory: a string of cURL data
+ * size:   length of memory
+*/
 typedef struct{
-    int array_length;
-    int *station_ids;
+    char   *memory;
+    size_t  size;
+} csepta_mem_t;
+
+
+/*
+ * csepta_station_t
+ * ----------------
+ * structure to hold all data related to a set of stations
+ * there are at most 64 stations in a struct
+ * for lines with more than 64 stations, only fill out handle & chunk sections in one and use subsequent ones just for holding station info
+ *
+ * array_length: the size of station_ids and bitmasks arrays
+ * station_ids:  an array of station IDs
+ * bitmasks:     an array of bitmasks. For an index i, bitmasks[i] is the bitmask for the station at station_ids[i]
+ * set_stations: a ul where each bit represents a station
+ * handle:       a cURL handle associated with this train line
+ * chunk:        a store of data returned by cURL calls
+*/
+typedef struct{
+    int            array_length;
+    int           *station_ids;
     unsigned long *bitmasks;
-    unsigned long set_stations;
-    CURL *handle;
-    mem_t *chunk;
-} station_t;
+    unsigned long  set_stations;
+    CURL          *handle;
+    csepta_mem_t  *chunk;
+} csepta_station_t;
 
+/*
+ * csepta_board_t
+ * --------------
+ * structure to represent the board
+ *
+ * lower_g_stations: the first 64 stations for the G trolley & cURL info for the line
+ * upper_g_stations: the final 50 stations for the G trolley
+*/
 typedef struct{
-    unsigned int  mfl_stations;
-    unsigned int  bsl_stations;
-    station_t *lower_g_stations;
-    station_t *upper_g_stations;
+    csepta_station_t  *lower_g_stations;
+    csepta_station_t  *upper_g_stations;
 } csepta_board_t;
 
+/*
+ * csepta_init_and_run
+ * -------------------
+ * configure board structure and run reader / writer threads
+ *
+ * returns: none
+*/
+void csepta_init_and_run();
+
+
+/*
+ * csepta_search
+ * -------------
+ * implementation of binary search for read lookups
+ *
+ * arr:    a pointer to an array of station IDs to search in
+ * size:   the length of arr
+ * target: the value to be found in arr
+ *
+ * returns: the index of target in arr, else -1 if not found
+*/
 int csepta_search(int *arr, int size, int target);
-void csepta_board_init();
-size_t csepta_write_callback(char *contents, size_t size, size_t nmemb, void *userp);
-void csepta_clear_chunk(mem_t *mem);
+
+
+/*
+ * csepta_clear_chunk
+ * ---------------------
+ * safely free and clean up csepta_mem_t chunks
+ *
+ * mem: a csepta_mem_t callback written to by csepta_write_callback after a cURL operation
+ *
+ * returns: none
+*/
+void csepta_clear_chunk(csepta_mem_t *mem);
+
+/*
+ * csepta_debug_print_binary_unsigned_long
+ * ---------------------------------------
+ * debug function to display ul as binary
+ *
+ * num: an unsigned long to display as binary
+ *
+ * returns: none
+*/
 void csepta_debug_print_binary_unsigned_long(unsigned long num);
+
 
 // G1
 #define LOWER_G_SIZE 64
