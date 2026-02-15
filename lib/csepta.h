@@ -24,7 +24,9 @@ typedef struct{
 
 int csepta_search(int *arr, int size, int target);
 void csepta_board_init();
-size_t cespta_write_callback(char *contents, size_t size, size_t nmemb, void *userp);
+size_t csepta_write_callback(char *contents, size_t size, size_t nmemb, void *userp);
+void csepta_clear_chunk(mem_t *mem);
+void csepta_debug_print_binary_unsigned_long(unsigned long num);
 
 // G1
 #define LOWER_G_SIZE 64
