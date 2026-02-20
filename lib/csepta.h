@@ -56,9 +56,11 @@ typedef struct{
  * structure to represent the board
  *
  * g_data: controls all data for the G trolley line
-*/
+ * t_data: controlls all data for the T1-T5 trolley lines
+ */
 typedef struct{
     csepta_station_t *g_data;
+    csepta_station_t *t_data;
 } csepta_board_t;
 
 /*
@@ -97,15 +99,15 @@ int32_t csepta_search(int32_t *arr, int32_t size, int32_t target);
 void csepta_clear_chunk(csepta_mem_t *mem);
 
 /*
- * csepta_debug_print_binary_unsigned_long
+ * csepta_debug_print_binary_u64
  * ---------------------------------------
- * debug function to display ul as binary
+ * debug function to display uint64_t as binary
  *
  * num: an uint64_t to display as binary
  *
  * returns: none
 */
-void csepta_debug_print_binary_unsigned_long(uint64_t num);
+void csepta_debug_print_binary_u64(uint64_t num);
 
 
 // G1

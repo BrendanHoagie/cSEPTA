@@ -7,4 +7,4 @@
 #define T3_TROLLEY_URL "https://api.septa.org/api/TransitView/index.php?route=T3"
 #define T4_TROLLEY_URL "https://api.septa.org/api/TransitView/index.php?route=T4"
 #define T5_TROLLEY_URL "https://api.septa.org/api/TransitView/index.php?route=T5"
-
+#define NUM_T_URLS 5
