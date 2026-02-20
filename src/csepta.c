@@ -1,5 +1,6 @@
 #include "../lib/csepta.h"
 #include "g_trolley.c"
+#include "t_trolley.c"
 
 /*
  * csepta_write_callback
@@ -16,9 +17,10 @@
 size_t csepta_write_callback(char *contents, size_t size, size_t nmemb, void *userp);
 
 void csepta_init_and_run(){
-	struct curl_slist *g_slist;
-	csepta_mem_t g_chunk;
-	csepta_station_t g_data;
+	csepta_board_t board;
+	struct curl_slist *slist;
+	csepta_mem_t g_chunk, t_chunk;
+	csepta_station_t g_data, t_data;
 	uint64_t g_stations[] = {0x0, 0x0};
 	csepta_pair_t g_pairs[] = {
 		{
@@ -32,11 +34,38 @@ void csepta_init_and_run(){
 			.bitmasks = G_SET_2_BITMASKS
 		}
 	};
-	csepta_board_t board;
-	// pthread_t thread1;
+	uint64_t t_stations[] = {0x0, 0x0, 0x0, 0x0, 0x0};
+	csepta_pair_t t_pairs[] = {
+		{
+			.length = T_SET_1_SIZE,
+			.station_ids = T_SET_1_IDS,
+			.bitmasks = T_SET_1_BITMASKS
+		},
+		{
+			.length = T_SET_2_SIZE,
+			.station_ids = T_SET_2_IDS,
+			.bitmasks = T_SET_2_BITMASKS
+		},
+		{
+			.length = T_SET_3_SIZE,
+			.station_ids = T_SET_3_IDS,
+			.bitmasks = T_SET_3_BITMASKS
+		},
+		{
+			.length = T_SET_4_SIZE,
+			.station_ids = T_SET_4_IDS,
+			.bitmasks = T_SET_4_BITMASKS
+		},
+		{
+			.length = T_SET_5_SIZE,
+			.station_ids = T_SET_5_IDS,
+			.bitmasks = T_SET_5_BITMASKS
+		}
+	};
 	
 	curl_global_init(CURL_GLOBAL_ALL);
-		
+	
+	// setup G trolley
 	g_data.num_stations = 2;
 	g_data.stations = g_stations;
 	g_data.pairs = g_pairs;
@@ -51,25 +80,41 @@ void csepta_init_and_run(){
 	g_chunk.size = 0;
 	g_data.chunk = &g_chunk;
 		
-	g_slist = NULL;
-  	g_slist = curl_slist_append(g_slist, "accept: application/json");
+	slist = NULL;
+  	slist = curl_slist_append(slist, "accept: application/json");
 	curl_easy_setopt(g_data.handle, CURLOPT_URL, G_TROLLEY_URL);
 	curl_easy_setopt(g_data.handle, CURLOPT_WRITEFUNCTION, csepta_write_callback);
 	curl_easy_setopt(g_data.handle, CURLOPT_WRITEDATA, g_data.chunk);
-	curl_easy_setopt(g_data.handle, CURLOPT_HTTPHEADER, g_slist);
+	curl_easy_setopt(g_data.handle, CURLOPT_HTTPHEADER, slist);
 	curl_easy_setopt(g_data.handle, CURLOPT_NOPROGRESS, 1L);
 	curl_easy_setopt(g_data.handle, CURLOPT_CUSTOMREQUEST, "GET");
 	curl_easy_setopt(g_data.handle, CURLOPT_BUFFERSIZE, 102400L); // could probably set lower than 10mb
 	
-	// setup threads
-    // ideally there is a writer thread and a updater thread
-    // the writer thread constantly reads from the board struct and updates the LEDs
-	// the updater thread round robin pulls data from septa API / timetable files
+	// setup T trolley
+	t_data.num_stations = 5;
+	t_data.stations = t_stations;
+	t_data.pairs = t_pairs;
+	t_data.handle = curl_easy_init();
+	if(!t_data.handle){
+		fprintf(stderr, "curl handle could not be initalized\n");
+		curl_easy_cleanup(t_data.handle);
+		exit(1);
+	}
 	
-	// pthread_create(&thread1, NULL, csepta_list_g_trolley, &board);
-    // pthread_join(thread1, NULL);
+	t_chunk.memory = NULL;
+	t_chunk.size = 0;
+	t_data.chunk = &t_chunk;
+	
+	curl_easy_setopt(t_data.handle, CURLOPT_WRITEFUNCTION, csepta_write_callback);
+	curl_easy_setopt(t_data.handle, CURLOPT_WRITEDATA, t_data.chunk);
+	curl_easy_setopt(t_data.handle, CURLOPT_HTTPHEADER, slist);
+	curl_easy_setopt(t_data.handle, CURLOPT_NOPROGRESS, 1L);
+	curl_easy_setopt(t_data.handle, CURLOPT_CUSTOMREQUEST, "GET");
+	curl_easy_setopt(t_data.handle, CURLOPT_BUFFERSIZE, 102400L); // could probably set lower than 10mb
+	
 	board.g_data = &g_data;
-	g_trolley_read(board.g_data);
+	board.t_data = &t_data;
+	t_trolley_run(board.t_data);
 	curl_global_cleanup();
 }
 
@@ -123,7 +168,7 @@ void csepta_clear_chunk(csepta_mem_t *mem){
 	mem->size = 0;
 }
 
-void csepta_debug_print_binary_unsigned_long(uint64_t num) {
+void csepta_debug_print_binary_u64(uint64_t num) {
     int32_t num_bits = sizeof(uint64_t) * CHAR_BIT;
     int32_t i;
     uint64_t mask = 1UL << (num_bits - 1);

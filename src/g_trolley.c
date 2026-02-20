@@ -86,7 +86,7 @@ void g_trolley_read(csepta_station_t *g_data){
 	
 	for(i = 0; i < g_data->num_stations; i++){
 		fprintf(stderr, "set %ld stations:\n", i);
-		csepta_debug_print_binary_unsigned_long(g_data->stations[i]);
+		csepta_debug_print_binary_u64(g_data->stations[i]);
 	}
 	cJSON_Delete(json);
 	csepta_clear_chunk(g_data->chunk);
