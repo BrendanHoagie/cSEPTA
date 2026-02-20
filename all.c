@@ -1,5 +1,6 @@
 #include <curl/curl.h>
 #include <pthread.h>
+#include <stdint.h>
 #include "lib/defs.h"
 #include "lib/cJSON.h"
 

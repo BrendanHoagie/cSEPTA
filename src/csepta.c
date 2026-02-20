@@ -18,43 +18,48 @@ size_t csepta_write_callback(char *contents, size_t size, size_t nmemb, void *us
 void csepta_init_and_run(){
 	struct curl_slist *g_slist;
 	csepta_mem_t g_chunk;
-	csepta_station_t lower_g_stations, upper_g;
+	csepta_station_t g_data;
+	uint64_t g_stations[] = {0x0, 0x0};
+	csepta_pair_t g_pairs[] = {
+		{
+			.length = G_SET_1_SIZE,
+			.station_ids = G_SET_1_IDS,
+			.bitmasks = G_SET_1_BITMASKS
+		},
+		{
+			.length = G_SET_2_SIZE,
+			.station_ids = G_SET_2_IDS,
+			.bitmasks = G_SET_2_BITMASKS
+		}
+	};
 	csepta_board_t board;
 	// pthread_t thread1;
 	
 	curl_global_init(CURL_GLOBAL_ALL);
 		
-	// setup G line -> lower contains all the control info (chunk, handle, etc)
-	lower_g_stations.array_length = LOWER_G_SIZE;
-	lower_g_stations.station_ids = LOWER_G_IDS;
-	lower_g_stations.bitmasks = LOWER_G_BITMASKS;
-	lower_g_stations.set_stations = 0x0;
-	
-	lower_g_stations.handle = curl_easy_init();
-	if(!lower_g_stations.handle){
+	g_data.num_stations = 2;
+	g_data.stations = g_stations;
+	g_data.pairs = g_pairs;
+	g_data.handle = curl_easy_init();
+	if(!g_data.handle){
 		fprintf(stderr, "curl handle could not be initalized\n");
-		curl_easy_cleanup(lower_g_stations.handle);
+		curl_easy_cleanup(g_data.handle);
 		exit(1);
 	}
+	
 	g_chunk.memory = NULL;
 	g_chunk.size = 0;
-	lower_g_stations.chunk = &g_chunk;
+	g_data.chunk = &g_chunk;
 		
 	g_slist = NULL;
   	g_slist = curl_slist_append(g_slist, "accept: application/json");
-	curl_easy_setopt(lower_g_stations.handle, CURLOPT_URL, G_TROLLEY_URL);
-	curl_easy_setopt(lower_g_stations.handle, CURLOPT_WRITEFUNCTION, csepta_write_callback);
-	curl_easy_setopt(lower_g_stations.handle, CURLOPT_WRITEDATA, lower_g_stations.chunk);
-	curl_easy_setopt(lower_g_stations.handle, CURLOPT_HTTPHEADER, g_slist);
-	curl_easy_setopt(lower_g_stations.handle, CURLOPT_NOPROGRESS, 1L);
-	curl_easy_setopt(lower_g_stations.handle, CURLOPT_CUSTOMREQUEST, "GET");
-	curl_easy_setopt(lower_g_stations.handle, CURLOPT_BUFFERSIZE, 102400L); // could probably set lower than 10mb
-	
-	// setup upper g train station -> all the g admin stuff is done by the lower stations
-	upper_g.array_length = UPPER_G_SIZE;
-	upper_g.station_ids = UPPER_G_IDS;
-	upper_g.set_stations = 0x0;
-	upper_g.bitmasks = UPPER_G_BITMASKS;
+	curl_easy_setopt(g_data.handle, CURLOPT_URL, G_TROLLEY_URL);
+	curl_easy_setopt(g_data.handle, CURLOPT_WRITEFUNCTION, csepta_write_callback);
+	curl_easy_setopt(g_data.handle, CURLOPT_WRITEDATA, g_data.chunk);
+	curl_easy_setopt(g_data.handle, CURLOPT_HTTPHEADER, g_slist);
+	curl_easy_setopt(g_data.handle, CURLOPT_NOPROGRESS, 1L);
+	curl_easy_setopt(g_data.handle, CURLOPT_CUSTOMREQUEST, "GET");
+	curl_easy_setopt(g_data.handle, CURLOPT_BUFFERSIZE, 102400L); // could probably set lower than 10mb
 	
 	// setup threads
     // ideally there is a writer thread and a updater thread
@@ -63,14 +68,13 @@ void csepta_init_and_run(){
 	
 	// pthread_create(&thread1, NULL, csepta_list_g_trolley, &board);
     // pthread_join(thread1, NULL);
-	board.lower_g_stations = &lower_g_stations;
-	board.upper_g_stations = &upper_g;
-	g_trolley_read(&board);
+	board.g_data = &g_data;
+	g_trolley_read(board.g_data);
 	curl_global_cleanup();
 }
 
-int csepta_search(int *arr, int size, int target){
-	int left, right, mid, i;
+int32_t csepta_search(int32_t *arr, int32_t size, int32_t target){
+	int32_t left, right, mid, i;
 
 	i = 0;
 	left = 0;
@@ -109,6 +113,7 @@ size_t csepta_write_callback(char *contents, size_t size, size_t nmemb, void *us
 	memcpy(&mem->memory[mem->size], contents, realsize);
 	mem->size += realsize;
 	mem->memory[mem->size] = 0;
+	// printf("Memory:\n-%ld bytes\n-text: %s\n", realsize, mem->memory);
 	return realsize;
 }
 
@@ -118,10 +123,10 @@ void csepta_clear_chunk(csepta_mem_t *mem){
 	mem->size = 0;
 }
 
-void csepta_debug_print_binary_unsigned_long(unsigned long num) {
-    int num_bits = sizeof(unsigned long) * CHAR_BIT;
-    int i;
-    unsigned long mask = 1UL << (num_bits - 1);
+void csepta_debug_print_binary_unsigned_long(uint64_t num) {
+    int32_t num_bits = sizeof(uint64_t) * CHAR_BIT;
+    int32_t i;
+    uint64_t mask = 1UL << (num_bits - 1);
 
     for (i = 0; i < num_bits; i++) {
         if (num & mask) {
