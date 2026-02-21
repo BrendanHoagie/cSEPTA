@@ -1,6 +1,7 @@
 #include "../lib/csepta.h"
 #include "g_trolley.c"
 #include "t_trolley.c"
+#include "d_trolley.c"
 
 /*
  * csepta_write_callback
@@ -19,8 +20,8 @@ size_t csepta_write_callback(char *contents, size_t size, size_t nmemb, void *us
 void csepta_init_and_run(){
 	csepta_board_t board;
 	struct curl_slist *slist;
-	csepta_mem_t g_chunk, t_chunk;
-	csepta_station_t g_data, t_data;
+	csepta_mem_t g_chunk, t_chunk, d_chunk;
+	csepta_station_t g_data, t_data, d_data;
 	uint64_t g_stations[] = {0x0, 0x0};
 	csepta_pair_t g_pairs[] = {
 		{
@@ -61,6 +62,19 @@ void csepta_init_and_run(){
 			.station_ids = T_SET_5_IDS,
 			.bitmasks = T_SET_5_BITMASKS
 		}
+	};
+	uint64_t d_stations[] = {0x0, 0x0};
+	csepta_pair_t d_pairs[] = {
+		{
+			.length = D_SET_1_SIZE,
+			.station_ids = D_SET_1_IDS,
+			.bitmasks = D_SET_1_BITMASKS
+		},
+		{
+			.length = D_SET_2_SIZE,
+			.station_ids = D_SET_2_IDS,
+			.bitmasks = D_SET_2_BITMASKS
+		},
 	};
 	
 	curl_global_init(CURL_GLOBAL_ALL);
@@ -112,9 +126,33 @@ void csepta_init_and_run(){
 	curl_easy_setopt(t_data.handle, CURLOPT_CUSTOMREQUEST, "GET");
 	curl_easy_setopt(t_data.handle, CURLOPT_BUFFERSIZE, 102400L); // could probably set lower than 10mb
 	
-	board.g_data = &g_data;
-	board.t_data = &t_data;
-	t_trolley_run(board.t_data);
+	
+	// setup D trolley
+	d_data.num_stations = 2;
+	d_data.stations = d_stations;
+	d_data.pairs = d_pairs;
+	d_data.handle = curl_easy_init();
+	if(!d_data.handle){
+		fprintf(stderr, "curl handle could not be initalized\n");
+		curl_easy_cleanup(d_data.handle);
+		exit(1);
+	}
+	
+	d_chunk.memory = NULL;
+	d_chunk.size = 0;
+	d_data.chunk = &d_chunk;
+	
+	curl_easy_setopt(d_data.handle, CURLOPT_WRITEFUNCTION, csepta_write_callback);
+	curl_easy_setopt(d_data.handle, CURLOPT_WRITEDATA, d_data.chunk);
+	curl_easy_setopt(d_data.handle, CURLOPT_HTTPHEADER, slist);
+	curl_easy_setopt(d_data.handle, CURLOPT_NOPROGRESS, 1L);
+	curl_easy_setopt(d_data.handle, CURLOPT_CUSTOMREQUEST, "GET");
+	curl_easy_setopt(d_data.handle, CURLOPT_BUFFERSIZE, 102400L); // could probably set lower than 10mb
+	
+	// board.g_data = &g_data;
+	// board.t_data = &t_data;
+	board.d_data = &d_data;
+	d_trolley_run(board.d_data);
 	curl_global_cleanup();
 }
 
