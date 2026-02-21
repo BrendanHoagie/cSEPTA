@@ -16,6 +16,14 @@ This hosts the code to to track live (or close to live) positions of all SEPTA m
 ### T Trolley Lines
 - Some (but not all) stations have two IDs. 19th st, for example, has 20646 & 20660, one for eastbound & one for westbound. Easiest way to deal with this might be to manually find them all (`T_stations_unique.txt`) and write rules in the display to crush them to one station? Seems easier than doing it on the data processing side, at least
 
+### D Trolley Lines
+- D1, D2
+
+### M Trolley Lines
+- M1
+
+
+
 ## External Libraries
 This project relies on 2 external libraries
 - [cURL](https://curl.se/)
