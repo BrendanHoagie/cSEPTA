@@ -2,6 +2,7 @@
 #include "g_trolley.c"
 #include "t_trolley.c"
 #include "d_trolley.c"
+#include "m_trolley.c"
 
 /*
  * csepta_write_callback
@@ -20,8 +21,8 @@ size_t csepta_write_callback(char *contents, size_t size, size_t nmemb, void *us
 void csepta_init_and_run(){
 	csepta_board_t board;
 	struct curl_slist *slist;
-	csepta_mem_t g_chunk, t_chunk, d_chunk;
-	csepta_station_t g_data, t_data, d_data;
+	csepta_mem_t g_chunk, t_chunk, d_chunk, m_chunk;
+	csepta_station_t g_data, t_data, d_data, m_data;
 	uint64_t g_stations[] = {0x0, 0x0};
 	csepta_pair_t g_pairs[] = {
 		{
@@ -76,7 +77,14 @@ void csepta_init_and_run(){
 			.bitmasks = D_SET_2_BITMASKS
 		},
 	};
-	
+	uint64_t m_stations[] = {0x0};
+	csepta_pair_t m_pairs[] = {
+		{
+			.length = M_SIZE,
+			.station_ids = M_IDS,
+			.bitmasks = M_BITMASKS
+		},
+	};
 	curl_global_init(CURL_GLOBAL_ALL);
 	
 	// setup G trolley
@@ -148,12 +156,37 @@ void csepta_init_and_run(){
 	curl_easy_setopt(d_data.handle, CURLOPT_CUSTOMREQUEST, "GET");
 	curl_easy_setopt(d_data.handle, CURLOPT_BUFFERSIZE, 102400L); // could probably set lower than 10mb
 	
+	// setup M trolley
+	m_data.num_stations = 1;
+	m_data.stations = m_stations;
+	m_data.pairs = m_pairs;
+	m_data.handle = curl_easy_init();
+	if(!m_data.handle){
+		fprintf(stderr, "curl handle could not be initalized\n");
+		curl_easy_cleanup(m_data.handle);
+		exit(1);
+	}
+	
+	m_chunk.memory = NULL;
+	m_chunk.size = 0;
+	m_data.chunk = &m_chunk;
+	
+	curl_easy_setopt(m_data.handle, CURLOPT_WRITEFUNCTION, csepta_write_callback);
+	curl_easy_setopt(m_data.handle, CURLOPT_WRITEDATA, m_data.chunk);
+	curl_easy_setopt(m_data.handle, CURLOPT_HTTPHEADER, slist);
+	curl_easy_setopt(m_data.handle, CURLOPT_NOPROGRESS, 1L);
+	curl_easy_setopt(m_data.handle, CURLOPT_CUSTOMREQUEST, "GET");
+	curl_easy_setopt(m_data.handle, CURLOPT_BUFFERSIZE, 102400L); // could probably set lower than 10mb
+	
+	// add to board
 	board.g_data = &g_data;
 	board.t_data = &t_data;
 	board.d_data = &d_data;
-	g_trolley_read(board.g_data);
+	board.m_data = &m_data;
+	// g_trolley_read(board.g_data);
 	// t_trolley_run(board.t_data);
 	// d_trolley_run(board.d_data);
+	m_trolley_read(board.m_data);
 	curl_global_cleanup();
 }
 

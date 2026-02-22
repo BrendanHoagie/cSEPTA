@@ -18,9 +18,11 @@ This hosts the code to to track live (or close to live) positions of all SEPTA m
 
 ### D Trolley Lines
 - D1, D2
+- same duplication problem
 
 ### M Trolley Lines
 - M1
+-same duplication problem
 
 
 
