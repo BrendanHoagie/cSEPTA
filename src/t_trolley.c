@@ -99,33 +99,17 @@ void t_trolley_read(csepta_station_t *t_data){
 */
 void t_trolley_run(csepta_station_t *t_data){
     size_t i;
-    
+    char url[64];
+	
     // reset station flags
 	for(i = 0; i < t_data->num_stations; i++){
 		t_data->stations[i] = 0x0;
 	}
     
     for(i = 1; i <= NUM_T_URLS; i++){
-        switch(i){
-            case 1:
-                curl_easy_setopt(t_data->handle, CURLOPT_URL, T1_TROLLEY_URL);
-                break;
-            case 2:
-                curl_easy_setopt(t_data->handle, CURLOPT_URL, T2_TROLLEY_URL);
-                break;
-            case 3:
-                curl_easy_setopt(t_data->handle, CURLOPT_URL, T3_TROLLEY_URL);
-                break;
-            case 4:
-                curl_easy_setopt(t_data->handle, CURLOPT_URL, T4_TROLLEY_URL);
-                break;
-            case 5:
-                curl_easy_setopt(t_data->handle, CURLOPT_URL, T5_TROLLEY_URL);
-                break;
-            default:
-                fprintf(stderr, "Error in T trolley URL switch, someone changed the value of NUM_T_URLs");
-                exit(1);
-        }
+		snprintf(url, sizeof(url), "%sT%ld", TROLLEY_BASE_URL, i);
+        fprintf(stderr, "Iteration %ld: url= %s\n", i, url);
+		curl_easy_setopt(t_data->handle, CURLOPT_URL, url);
         t_trolley_read(t_data);
     }
 }

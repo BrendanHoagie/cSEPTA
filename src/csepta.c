@@ -96,7 +96,6 @@ void csepta_init_and_run(){
 		
 	slist = NULL;
   	slist = curl_slist_append(slist, "accept: application/json");
-	curl_easy_setopt(g_data.handle, CURLOPT_URL, G_TROLLEY_URL);
 	curl_easy_setopt(g_data.handle, CURLOPT_WRITEFUNCTION, csepta_write_callback);
 	curl_easy_setopt(g_data.handle, CURLOPT_WRITEDATA, g_data.chunk);
 	curl_easy_setopt(g_data.handle, CURLOPT_HTTPHEADER, slist);
@@ -149,10 +148,12 @@ void csepta_init_and_run(){
 	curl_easy_setopt(d_data.handle, CURLOPT_CUSTOMREQUEST, "GET");
 	curl_easy_setopt(d_data.handle, CURLOPT_BUFFERSIZE, 102400L); // could probably set lower than 10mb
 	
-	// board.g_data = &g_data;
-	// board.t_data = &t_data;
+	board.g_data = &g_data;
+	board.t_data = &t_data;
 	board.d_data = &d_data;
-	d_trolley_run(board.d_data);
+	g_trolley_read(board.g_data);
+	// t_trolley_run(board.t_data);
+	// d_trolley_run(board.d_data);
 	curl_global_cleanup();
 }
 

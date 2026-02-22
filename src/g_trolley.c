@@ -43,8 +43,12 @@ void g_trolley_read(csepta_station_t *g_data){
 	CURLcode res;
 	cJSON *json, *trolleys, *trolley, *next_stop_id;
 	size_t i;
+	char url[64];
 	
 	fprintf(stderr, "in trolley read\n");
+	snprintf(url, sizeof(url), "%sG1", TROLLEY_BASE_URL);
+	fprintf(stderr, "Iteration %ld: url= %s\n", i, url);
+	curl_easy_setopt(g_data->handle, CURLOPT_URL, url);
 	res = curl_easy_perform(g_data->handle);
 	if(res != CURLE_OK){
 		fprintf(stderr, "curl_easy_perform() returned %s\n", curl_easy_strerror(res));
