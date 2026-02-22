@@ -1,3 +1,5 @@
 *.vscode/
 csepta
 debug
+data/
+scripts/
